@@ -1,13 +1,12 @@
 // Server side C/C++ program to demonstrate Socket programming
-
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
-
-#define PORT 80
+#include <errno.h>
+#define PORT 8080
 int main(int argc, char const *argv[])
 {
     int server_fd, new_socket, valread;
@@ -16,7 +15,6 @@ int main(int argc, char const *argv[])
     int addrlen = sizeof(address);
     char buffer[102] = {0};
     char *hello = "Hello from server";
-
     printf("execve=0x%p\n", execve);
 
     // Creating socket file descriptor
@@ -26,20 +24,20 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Attaching socket to port 80
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
-                                                  &opt, sizeof(opt)))
+    // Forcefully attaching socket to the port 8080
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR,
+                   &opt, sizeof(opt)))
     {
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons( PORT );
+    address.sin_port = htons(PORT);
 
-    // Forcefully attaching socket to the port 80
+    // Forcefully attaching socket to the port 8080
     if (bind(server_fd, (struct sockaddr *)&address,
-                                 sizeof(address))<0)
+             sizeof(address)) < 0)
     {
         perror("bind failed");
         exit(EXIT_FAILURE);
@@ -50,14 +48,40 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
     if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
-                       (socklen_t*)&addrlen))<0)
+                             (socklen_t *)&addrlen)) < 0)
     {
         perror("accept");
         exit(EXIT_FAILURE);
     }
-    valread = read( new_socket , buffer, 1024);
-    printf("%s\n",buffer );
-    send(new_socket , hello , strlen(hello) , 0 );
-    printf("Hello message sent\n");
+    int currentPid = fork();
+    if (current_pid == 0)
+    {
+        //Child Block
+
+        printf("Child Running\n");
+        //Privilage reduced to Nobody with Nobody u_id : 65534
+        int privilegeSuccess = setuid(65534);
+        if (privilegeSet == -1)
+        {
+            printf("Setuid returned -1\n");
+            return 0;
+        }
+        valread = read(new_socket, buffer, 1024);
+        printf("%s\n", buffer);
+        send(new_socket, hello, strlen(hello), 0);
+        printf("Hello message sent\n");
+    }
+    else if (current_pid > 0)
+    {
+        // Parent Block
+        wait(2);
+        printf("Parent running...\n");
+    }
+    else
+    {
+        perror("Unable to fork");
+        _exit(2);
+    }
+
     return 0;
 }
