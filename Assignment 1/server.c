@@ -54,14 +54,14 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
     int currentPid = fork();
-    if (current_pid == 0)
+    if (currentPid == 0)
     {
         //Child Block
 
         printf("Child Running\n");
         //Privilage reduced to Nobody with Nobody u_id : 65534
         int privilegeSuccess = setuid(65534);
-        if (privilegeSet == -1)
+        if (privilegeSuccess == -1)
         {
             printf("Setuid returned -1\n");
             return 0;
@@ -71,7 +71,7 @@ int main(int argc, char const *argv[])
         send(new_socket, hello, strlen(hello), 0);
         printf("Hello message sent\n");
     }
-    else if (current_pid > 0)
+    else if (currentPid > 0)
     {
         // Parent Block
         wait(2);
