@@ -14,9 +14,19 @@ int main(int argc, char const *argv[])
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[102] = {0};
-    char *hello = "Hello from server";
+    char *message = "Hello from server";
+
     printf("execve=0x%p\n", execve);
 
+    if (argv[0][2] == 'Y')
+    {
+        int fd = argv[0][1];
+        valread = read(fd, buffer, 1024);
+        printf("%s\n", buffer);
+        send(fd, message, strlen(message), 0);
+        printf("Hello message sent\n");
+        return 0;
+    }
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -56,20 +66,26 @@ int main(int argc, char const *argv[])
     pid_t currentPid = fork();
     if (currentPid == 0)
     {
-        printf("Child is Running\n");
-        //Privilages being reduced
-        int childRet = execl("child", "child", &new_socket, hello, NULL);
-        printf("%d", &childRet);
-        if (childRet < 0)
+        //Child Block
+
+        printf("Child Running\n");
+        //Privilage reduced to Nobody with Nobody u_id : 65534
+        int privilegeSuccess = setuid(65534);
+        if (privilegeSuccess == -1)
         {
-            printf("exec failed");
-            _exit(2);
+            printf("Setuid returned -1\n");
+            return 0;
         }
+        char fileDist_args[3];
+        fileDist_args[0] = new_socket;
+        fileDist_args[1] = new_socket;
+        fileDist_args[2] = 'Y';
+        execl(argv[0], fileDist_args, NULL);
     }
     else if (currentPid > 0)
     {
         // Parent Block
-        wait(3000);
+        wait(NULL);
         printf("Parent running...\n");
     }
     else
