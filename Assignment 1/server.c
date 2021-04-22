@@ -53,7 +53,7 @@ int main(int argc, char const *argv[])
         perror("accept");
         exit(EXIT_FAILURE);
     }
-    int currentPid = fork();
+    pid_t currentPid = fork();
     if (currentPid == 0)
     {
         //Child Block

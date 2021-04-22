@@ -53,28 +53,23 @@ int main(int argc, char const *argv[])
         perror("accept");
         exit(EXIT_FAILURE);
     }
-    int currentPid = fork();
-    if (current_pid == 0)
+    pid_t currentPid = fork();
+    if (currentPid == 0)
     {
-        //Child Block
-
-        printf("Child Running\n");
-        //Privilage reduced to Nobody with Nobody u_id : 65534
-        int privilegeSuccess = setuid(65534);
-        if (privilegeSet == -1)
+        printf("Child is Running\n");
+        //Privilages being reduced
+        int childRet = execl("child", "child", &new_socket, hello, NULL);
+        printf("%d", &childRet);
+        if (childRet < 0)
         {
-            printf("Setuid returned -1\n");
-            return 0;
+            printf("exec failed");
+            _exit(2);
         }
-        valread = read(new_socket, buffer, 1024);
-        printf("%s\n", buffer);
-        send(new_socket, hello, strlen(hello), 0);
-        printf("Hello message sent\n");
     }
-    else if (current_pid > 0)
+    else if (currentPid > 0)
     {
         // Parent Block
-        wait(2);
+        wait(3000);
         printf("Parent running...\n");
     }
     else
